@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tenant Job Scheduler Demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Multi-tenant async processing</p>
+      <h1>Tenant Scheduler Demo</h1>
+    </div>
+    <div class="status-strip">
+      <span id="apiStatus" class="pill neutral">checking API</span>
+      <span id="httpsStatus" class="pill neutral">HTTPS unknown</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="control-panel">
+      <div class="section-head">
+        <div>
+          <h2>Scenario Control</h2>
+          <p>Seed different tenant activity patterns. Real worker capacity is configured in Queue Service.</p>
+        </div>
+        <button id="resetBtn" class="ghost-button" type="button">Reset</button>
+      </div>
+
+      <div class="controls-grid">
+        <label>
+          Scenario
+          <select id="scenario">
+            <option value="all-tenants">20 active tenants</option>
+            <option value="two-tenants">2 active tenants</option>
+            <option value="activation-burst">Tenant activation burst</option>
+          </select>
+        </label>
+
+        <label>
+          Job duration, ms
+          <input id="duration" type="number" min="50" max="10000" step="50" value="500">
+        </label>
+
+        <button id="seedBtn" class="primary-button" type="button">Apply Scenario</button>
+      </div>
+    </section>
+
+    <section class="control-panel secondary-panel">
+      <div class="section-head">
+        <div>
+          <h2>Add Custom Jobs</h2>
+          <p>Create new requests for any tenant without resetting the current queue.</p>
+        </div>
+      </div>
+
+      <div class="custom-grid">
+        <label>
+          Tenant ID
+          <input id="customTenantId" type="text" value="tenant-custom" placeholder="tenant-a">
+        </label>
+
+        <label>
+          Job count
+          <input id="customJobCount" type="number" min="1" max="200" value="1">
+        </label>
+
+        <label>
+          Duration, ms
+          <input id="customDuration" type="number" min="50" max="10000" step="50" value="1000">
+        </label>
+
+        <button id="addJobsBtn" class="primary-button" type="button">Add Jobs</button>
+      </div>
+    </section>
+
+    <section class="control-panel secondary-panel">
+      <div class="section-head">
+        <div>
+          <h2>Fault Tolerance Demo</h2>
+          <p>Create failure scenarios to observe retry/dead-letter and worker recovery behavior.</p>
+        </div>
+      </div>
+
+      <div class="custom-grid">
+        <label>
+          Fault tenant
+          <input id="faultTenantId" type="text" value="tenant-fault-demo" placeholder="tenant-fault">
+        </label>
+
+        <button id="failJobBtn" class="ghost-button" type="button">Retry to Dead-letter</button>
+        <button id="stuckJobBtn" class="primary-button" type="button">Expired Worker Lock</button>
+      </div>
+      <pre id="faultResult" class="code-block compact-code">No fault scenario created yet.</pre>
+    </section>
+
+    <section class="metrics-band">
+      <div>
+        <span class="metric-label">Queued</span>
+        <strong id="queuedMetric">0</strong>
+      </div>
+      <div>
+        <span class="metric-label">Running</span>
+        <strong id="runningMetric">0</strong>
+      </div>
+      <div>
+        <span class="metric-label">Completed</span>
+        <strong id="completedMetric">0</strong>
+      </div>
+      <div>
+        <span class="metric-label">Dead-letter</span>
+        <strong id="deadMetric">0</strong>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <div class="section-head compact">
+          <div>
+            <h2>Slot Allocation Preview</h2>
+            <p>Shows the next scheduler decision using Queue Service capacity.</p>
+          </div>
+          <button id="refreshBtn" class="ghost-button" type="button">Refresh</button>
+        </div>
+        <div id="tenantBars" class="tenant-bars"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head compact">
+          <div>
+            <h2>Security Demonstration</h2>
+            <p>Transport, payload encryption, and tenant isolation signals.</p>
+          </div>
+        </div>
+        <div id="securityPanel" class="security-list"></div>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <div class="section-head compact">
+          <div>
+            <h2>Tenant Isolation</h2>
+            <p>Requests include an `X-Tenant-Id` header and only matching tenant jobs are returned.</p>
+          </div>
+        </div>
+        <div class="inline-controls">
+          <select id="tenantSelector"></select>
+          <button id="tenantLoadBtn" class="ghost-button" type="button">Load Tenant View</button>
+        </div>
+        <pre id="tenantResult" class="code-block">Choose a tenant to test isolation.</pre>
+      </div>
+
+      <div class="panel">
+        <div class="section-head compact">
+          <div>
+            <h2>Stored Jobs</h2>
+            <p>Payload content is stored encrypted; only encrypted previews are shown here.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tenant</th>
+                <th>Status</th>
+                <th>Attempts</th>
+                <th>Encrypted payload</th>
+              </tr>
+            </thead>
+            <tbody id="jobsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

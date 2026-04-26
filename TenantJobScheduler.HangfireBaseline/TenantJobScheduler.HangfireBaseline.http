@@ -1,0 +1,6 @@
+@TenantJobScheduler.HangfireBaseline_HostAddress = http://localhost:5253
+
+GET {{TenantJobScheduler.HangfireBaseline_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
