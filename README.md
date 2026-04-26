@@ -88,12 +88,24 @@ This requires Docker to be running.
 
 ## Load Testing
 
-Install `k6`, start the tenant-aware API, Worker, and Queue Service, then run:
+Install `k6`, start the tenant-aware API, Worker, and Queue Service, then run all load scenarios.
+
+Windows install options:
 
 ```powershell
-$env:BASE_URL="http://localhost:5080"
-$env:SCENARIO="all-tenants"
-k6 run .\load-tests\k6-tenant-fairness.js
+winget install k6 --source winget
+```
+
+or:
+
+```powershell
+choco install k6
+```
+
+Official installation guide: https://grafana.com/docs/k6/latest/set-up/install-k6/
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-k6-load-tests.ps1 -BaseUrl http://localhost:5080 -Rate 40 -Duration 1m -JobDurationMs 500
 ```
 
 Supported scenarios:
@@ -101,6 +113,10 @@ Supported scenarios:
 - `all-tenants` - 20 active tenants, expected near-even distribution.
 - `two-tenants` - 2 active tenants, expected work-conserving slot usage.
 - `activation-burst` - tenant activation burst, expected next-cycle scheduler response.
+
+The script writes a Markdown report to `docs\k6-load-test-results.md` and raw k6 JSON summaries to `docs\k6-results`.
+
+If PowerShell blocks local scripts, use the same `powershell -ExecutionPolicy Bypass -File ...` form shown above.
 
 ## Hangfire Baseline
 
@@ -137,6 +153,7 @@ The UI can demonstrate:
 Prerequisites:
 
 - Install .NET SDK 8 or newer.
+- Install k6 if you want to run real HTTP load tests.
 - Copy this whole folder to the target computer.
 - Open PowerShell in the copied folder.
 
@@ -168,6 +185,18 @@ The benchmark report is written to:
 
 ```text
 docs\benchmark-results.md
+```
+
+Run real HTTP load tests with k6:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-k6-load-tests.ps1 -BaseUrl http://localhost:5080 -Rate 40 -Duration 1m -JobDurationMs 500
+```
+
+This requires k6 to be installed and the demo services to be running. The report is written to:
+
+```text
+docs\k6-load-test-results.md
 ```
 
 To simulate a smaller worker pool, start the demo with another slot count:
