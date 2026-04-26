@@ -373,5 +373,20 @@
     "lockedUntil": null,
     "result": "Job 760b27b9-e3cd-41ea-84e4-99bcdf46714f completed for tenant tenant-fault-demo.",
     "error": null
+  },
+  {
+    "id": "727976b8-acf8-4a13-9f80-018ddf374ef4",
+    "tenantId": "tenant-fault-demo",
+    "encryptedPayload": "fVG7vmRUuGtSRkJj2r\u002B1UN1uWdXnh73HttbpFpUjB2QIR4S9GwZwukFw3CZtCH15m5mv4sae3MH8npQnvhkRiUTZXx\u002BEky287WzQP1tizXY=",
+    "priority": 0,
+    "status": 4,
+    "attemptCount": 3,
+    "maxAttempts": 3,
+    "createdAt": "2026-04-26T06:54:31.8565585+00:00",
+    "updatedAt": "2026-04-26T06:54:43.6375374+00:00",
+    "availableAt": null,
+    "lockedUntil": null,
+    "result": null,
+    "error": "Demo failure requested by payload."
   }
 ]

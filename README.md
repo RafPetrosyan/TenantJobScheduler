@@ -50,7 +50,7 @@ $env:PAYLOAD_ENCRYPTION_KEY="local-development-key"
 dotnet run --project TenantJobScheduler.Api --urls http://localhost:5080
 ```
 
-Submit jobs from the UI with **Signed Tenant Request**. The unsigned `POST /jobs` endpoint is disabled and returns `410 Gone`.
+The unsigned `POST /jobs` endpoint is disabled and returns `410 Gone`. Tenant-facing submissions use signed requests through `POST /jobs/signed`.
 
 Signed job API flow:
 
@@ -125,8 +125,55 @@ The comparison criteria are summarized in `docs/comparison-matrix.md`.
 The UI can demonstrate:
 
 - Different tenant activity scenarios: 20 active tenants, 2 active tenants, and activation bursts.
-- Different worker capacity conditions through the worker slots slider.
+- Different worker capacity conditions by restarting the demo with another `-TotalSlots` value.
 - HTTPS state for the current request.
 - Job payload encryption through encrypted storage previews.
 - Tenant isolation through `/tenants/{tenantId}/jobs`, which requires the `X-Tenant-Id` header to match the requested tenant.
+- Retry/dead-letter behavior and expired worker lock recovery.
 - Signed tenant submission through `/jobs/signed`; unsigned `/jobs` is disabled.
+
+## Run On Another Computer
+
+Prerequisites:
+
+- Install .NET SDK 8 or newer.
+- Copy this whole folder to the target computer.
+- Open PowerShell in the copied folder.
+
+Start the complete demo with one command:
+
+```powershell
+.\scripts\run-demo.ps1 -TotalSlots 20
+```
+
+Open the UI:
+
+```text
+http://localhost:5080/
+```
+
+Stop all demo services:
+
+```powershell
+.\scripts\stop-demo.ps1
+```
+
+Run the scheduler benchmark used for chapter 4:
+
+```powershell
+.\scripts\run-benchmarks.ps1
+```
+
+The benchmark report is written to:
+
+```text
+docs\benchmark-results.md
+```
+
+To simulate a smaller worker pool, start the demo with another slot count:
+
+```powershell
+.\scripts\run-demo.ps1 -TotalSlots 3
+```
+
+For the simplest demo mode, no SQL Server is required; the system uses `App_Data\jobs.json`. SQL Server can still be enabled separately with `JOB_STORE_PROVIDER=SqlServer` and `JOB_STORE_CONNECTION_STRING`.
