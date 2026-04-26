@@ -3,6 +3,7 @@ using System.Globalization;
 using TenantJobScheduler.Shared;
 
 const int totalSlots = 20;
+const int reservedHeadroomSlots = 1;
 const int jobDurationTicks = 5;
 var now = DateTimeOffset.UtcNow;
 var scenarios = new[]
@@ -12,7 +13,7 @@ var scenarios = new[]
     BuildActivationBurstScenario(now)
 };
 
-var results = scenarios.Select(scenario => RunScenario(scenario, totalSlots, jobDurationTicks)).ToList();
+var results = scenarios.Select(scenario => RunScenario(scenario, totalSlots, reservedHeadroomSlots, jobDurationTicks)).ToList();
 var outputPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "docs", "benchmark-results.md"));
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 File.WriteAllText(outputPath, BuildMarkdown(results));
@@ -52,7 +53,7 @@ static Scenario BuildActivationBurstScenario(DateTimeOffset now)
     return new Scenario("Սցենար 3. Tenant activation burst", jobs);
 }
 
-static BenchmarkResult RunScenario(Scenario scenario, int totalSlots, int jobDurationTicks)
+static BenchmarkResult RunScenario(Scenario scenario, int totalSlots, int reservedHeadroomSlots, int jobDurationTicks)
 {
     var stopwatch = Stopwatch.StartNew();
     var scheduler = new TenantScheduler();
@@ -78,7 +79,7 @@ static BenchmarkResult RunScenario(Scenario scenario, int totalSlots, int jobDur
         }
 
         var now = simulationStart.AddTicks(tick);
-        var selected = scheduler.SelectDispatchBatch(jobs, totalSlots, now);
+        var selected = scheduler.SelectDispatchBatch(jobs, totalSlots, now, reservedHeadroomSlots);
         foreach (var job in selected)
         {
             if (job.Status != JobStatus.Queued)
@@ -104,7 +105,7 @@ static BenchmarkResult RunScenario(Scenario scenario, int totalSlots, int jobDur
     var tenantGroups = completed.GroupBy(job => job.TenantId).ToList();
     var averageLatency = completed.Average(job => job.LatencyTicks);
     var p95Latency = Percentile(completed.Select(job => (double)job.LatencyTicks).Order().ToList(), 0.95);
-    var throughput = completed.Count / Math.Max(1, tick);
+    var throughput = completed.Count / (double)Math.Max(1, tick);
     var utilization = slotSamples.Average() * 100;
     var fairnessSpread = tenantGroups.Max(group => group.Count()) - tenantGroups.Min(group => group.Count());
 
@@ -113,6 +114,7 @@ static BenchmarkResult RunScenario(Scenario scenario, int totalSlots, int jobDur
         completed.Count,
         tenantGroups.Count,
         totalSlots,
+        reservedHeadroomSlots,
         tick,
         throughput,
         averageLatency,
@@ -130,13 +132,13 @@ static string BuildMarkdown(IReadOnlyList<BenchmarkResult> results)
         "",
         "Այս արդյունքները ստացվել են TenantScheduler ալգորիթմի deterministic simulation-ով։ Ժամանակը ներկայացված է simulation tick-երով, ոչ իրական վայրկյաններով։",
         "",
-        "| Սցենար | Jobs | Active tenants | Slots | Total ticks | Throughput (jobs/tick) | Avg latency | P95 latency | Slot utilization | Fairness spread |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+        "| Սցենար | Jobs | Active tenants | Slots | Reserved headroom | Total ticks | Throughput (jobs/tick) | Avg latency | P95 latency | Slot utilization | Fairness spread |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
     };
 
     lines.AddRange(results.Select(result =>
         string.Create(CultureInfo.InvariantCulture,
-            $"| {result.Name} | {result.CompletedJobs} | {result.ActiveTenants} | {result.TotalSlots} | {result.TotalTicks} | {result.Throughput:F2} | {result.AverageLatency:F2} | {result.P95Latency:F2} | {result.SlotUtilization:F1}% | {result.FairnessSpread} |")));
+            $"| {result.Name} | {result.CompletedJobs} | {result.ActiveTenants} | {result.TotalSlots} | {result.ReservedHeadroomSlots} | {result.TotalTicks} | {result.Throughput:F2} | {result.AverageLatency:F2} | {result.P95Latency:F2} | {result.SlotUtilization:F1}% | {result.FairnessSpread} |")));
 
     lines.AddRange([
         "",
@@ -208,6 +210,7 @@ public sealed record BenchmarkResult(
     int CompletedJobs,
     int ActiveTenants,
     int TotalSlots,
+    int ReservedHeadroomSlots,
     int TotalTicks,
     double Throughput,
     double AverageLatency,

@@ -1,0 +1,167 @@
+{
+    "metrics": {
+        "http_req_blocked": {
+            "avg": 0.005461090303786933,
+            "min": 0,
+            "med": 0,
+            "max": 6.7769,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_waiting": {
+            "p(95)": 118.84242000000002,
+            "avg": 23.517097045359954,
+            "min": 0.5032,
+            "med": 9.6636,
+            "max": 285.1328,
+            "p(90)": 63.352080000000086
+        },
+        "jobs_submitted": {
+            "count": 2401,
+            "rate": 39.86547267566956
+        },
+        "iterations": {
+            "rate": 39.86547267566956,
+            "count": 2401
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 24.954709945900973,
+            "min": 0.5032,
+            "med": 11.0586,
+            "max": 285.1328,
+            "p(90)": 66.21000000000004,
+            "p(95)": 118.92958
+        },
+        "iteration_duration": {
+            "max": 385.4992,
+            "p(90)": 166.6311,
+            "p(95)": 219.4778,
+            "avg": 125.43473594335713,
+            "min": 100.8104,
+            "med": 111.6694
+        },
+        "http_req_duration": {
+            "min": 0.5032,
+            "med": 11.0586,
+            "max": 285.1328,
+            "p(90)": 66.21000000000004,
+            "p(95)": 118.92958,
+            "avg": 24.954709945900973,
+            "thresholds": {
+                "p(95)<750": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 2403,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_connecting": {
+            "max": 1.0118,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.0023507698709945906,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_receiving": {
+            "p(90)": 3.9224,
+            "p(95)": 5.2584,
+            "avg": 1.4356829796088229,
+            "min": 0,
+            "med": 0.7359,
+            "max": 13.7126
+        },
+        "job_submit_latency": {
+            "avg": 24.956173219491895,
+            "min": 0.5032,
+            "med": 11.0586,
+            "max": 285.1328,
+            "p(90)": 66.2508,
+            "p(95)": 118.9375
+        },
+        "data_received": {
+            "count": 1542594,
+            "rate": 25612.76091489038
+        },
+        "http_reqs": {
+            "count": 2403,
+            "rate": 39.89868006648644
+        },
+        "vus_max": {
+            "value": 20,
+            "min": 20,
+            "max": 20
+        },
+        "http_req_sending": {
+            "avg": 0.0019299209321681236,
+            "min": 0,
+            "med": 0,
+            "max": 0.7762,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus": {
+            "max": 14,
+            "value": 14,
+            "min": 4
+        },
+        "http_req_tls_handshaking": {
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0
+        },
+        "data_sent": {
+            "count": 455289,
+            "rate": 7559.47987881421
+        },
+        "checks": {
+            "fails": 0,
+            "passes": 2402,
+            "value": 1
+        }
+    },
+    "setup_data": {
+        "duration": "1m",
+        "durationMs": 500,
+        "rate": 40,
+        "scenario": "activation-burst"
+    },
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "teardown": {
+                "name": "teardown",
+                "path": "::teardown",
+                "id": "a8a9942382e8ffe2e56ef29e664b8229",
+                "groups": {},
+                "checks": {
+                        "job list readable after load": {
+                            "fails": 0,
+                            "name": "job list readable after load",
+                            "path": "::teardown::job list readable after load",
+                            "id": "329458e8ba808fe4db20075a855ad27a",
+                            "passes": 1
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "job accepted": {
+                "name": "job accepted",
+                "path": "::job accepted",
+                "id": "3d9f2ec626f65cdfb5686c10d21994f2",
+                "passes": 2401,
+                "fails": 0
+            }
+        },
+        "name": "",
+        "path": ""
+    }
+}

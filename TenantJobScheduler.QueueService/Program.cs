@@ -19,15 +19,22 @@ var workerUrl = Environment.GetEnvironmentVariable("WORKER_URL") ?? "http://loca
 var initialSlots = int.TryParse(Environment.GetEnvironmentVariable("TOTAL_SLOTS"), out var parsedSlots)
     ? parsedSlots
     : 20;
+var initialHeadroomSlots = int.TryParse(Environment.GetEnvironmentVariable("RESERVED_HEADROOM_SLOTS"), out var parsedHeadroomSlots)
+    ? parsedHeadroomSlots
+    : 1;
 var settingsStore = new SchedulerSettingsStore(
     Environment.GetEnvironmentVariable("SCHEDULER_SETTINGS_PATH")
     ?? Path.Combine(AppContext.BaseDirectory, "App_Data", "scheduler-settings.json"));
-await settingsStore.SaveAsync(new SchedulerSettings(Math.Clamp(initialSlots, 1, 100)), CancellationToken.None);
+await settingsStore.SaveAsync(
+    new SchedulerSettings(
+        Math.Clamp(initialSlots, 1, 100),
+        Math.Clamp(initialHeadroomSlots, 0, Math.Max(0, initialSlots - 1))),
+    CancellationToken.None);
 var lockSeconds = int.TryParse(Environment.GetEnvironmentVariable("JOB_LOCK_SECONDS"), out var parsedLock)
     ? parsedLock
     : 120;
 
-Console.WriteLine($"Queue Service started. slots={initialSlots}, worker={workerUrl}");
+Console.WriteLine($"Queue Service started. slots={initialSlots}, reservedHeadroom={initialHeadroomSlots}, worker={workerUrl}");
 
 using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
 try
@@ -35,12 +42,14 @@ try
     while (await timer.WaitForNextTickAsync(shutdown.Token))
     {
         var now = DateTimeOffset.UtcNow;
-        var totalSlots = (await settingsStore.GetAsync(shutdown.Token)).TotalSlots;
+        var settings = await settingsStore.GetAsync(shutdown.Token);
+        var totalSlots = settings.TotalSlots;
+        var reservedHeadroomSlots = settings.ReservedHeadroomSlots;
         await RecoverExpiredLocksAsync(now);
         await RecoverFailedJobsAsync(now);
 
         var jobs = await store.ListAsync(CancellationToken.None);
-        var batch = scheduler.SelectDispatchBatch(jobs, totalSlots, now);
+        var batch = scheduler.SelectDispatchBatch(jobs, totalSlots, now, reservedHeadroomSlots);
 
         foreach (var job in batch)
         {

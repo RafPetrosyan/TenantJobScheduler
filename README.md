@@ -157,10 +157,10 @@ Prerequisites:
 - Copy this whole folder to the target computer.
 - Open PowerShell in the copied folder.
 
-Start the complete demo with one command:
+Start the complete demo with one command. By default, one worker slot is kept as reserved headroom for newly active tenants:
 
 ```powershell
-.\scripts\run-demo.ps1 -TotalSlots 20
+.\scripts\run-demo.ps1 -TotalSlots 20 -ReservedHeadroomSlots 1
 ```
 
 Open the UI:
@@ -202,7 +202,7 @@ docs\k6-load-test-results.md
 To simulate a smaller worker pool, start the demo with another slot count:
 
 ```powershell
-.\scripts\run-demo.ps1 -TotalSlots 3
+.\scripts\run-demo.ps1 -TotalSlots 3 -ReservedHeadroomSlots 1
 ```
 
 For the simplest demo mode, no SQL Server is required; the system uses `App_Data\jobs.json`. SQL Server can still be enabled separately with `JOB_STORE_PROVIDER=SqlServer` and `JOB_STORE_CONNECTION_STRING`.

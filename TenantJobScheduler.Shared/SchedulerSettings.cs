@@ -2,9 +2,9 @@ using System.Text.Json;
 
 namespace TenantJobScheduler.Shared;
 
-public sealed record SchedulerSettings(int TotalSlots)
+public sealed record SchedulerSettings(int TotalSlots, int ReservedHeadroomSlots = 1)
 {
-    public static SchedulerSettings Default { get; } = new(20);
+    public static SchedulerSettings Default { get; } = new(20, 1);
 }
 
 public sealed class SchedulerSettingsStore(string filePath)

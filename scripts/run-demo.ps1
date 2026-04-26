@@ -1,5 +1,6 @@
 param(
     [int]$TotalSlots = 20,
+    [int]$ReservedHeadroomSlots = 1,
     [string]$ApiUrl = "http://localhost:5080",
     [string]$WorkerUrl = "http://localhost:5081"
 )
@@ -21,6 +22,7 @@ $env:WORKER_LISTEN_URL = $WorkerUrl
 $env:API_CALLBACK_BASE_URL = $ApiUrl
 $env:WORKER_URL = "$WorkerUrl/worker/jobs"
 $env:TOTAL_SLOTS = "$TotalSlots"
+$env:RESERVED_HEADROOM_SLOTS = "$ReservedHeadroomSlots"
 
 Write-Host "Building solution..."
 dotnet build (Join-Path $root "TenantJobScheduler.sln")
@@ -51,6 +53,7 @@ Write-Host "Demo is starting."
 Write-Host "UI: $ApiUrl/"
 Write-Host "Worker: $WorkerUrl"
 Write-Host "Total slots: $TotalSlots"
+Write-Host "Reserved headroom slots: $ReservedHeadroomSlots"
 Write-Host "Logs: $logs"
 Write-Host ""
 Write-Host "If the browser does not load immediately, wait a few seconds and refresh."

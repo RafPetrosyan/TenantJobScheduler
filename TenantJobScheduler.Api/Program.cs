@@ -173,13 +173,19 @@ app.MapPost("/demo/scenarios", async (
         }
     }
 
-    var totalSlots = (await settingsStore.GetAsync(cancellationToken)).TotalSlots;
-    var preview = new TenantScheduler().SelectDispatchBatch(created, totalSlots, DateTimeOffset.UtcNow);
+    var settings = await settingsStore.GetAsync(cancellationToken);
+    var totalSlots = settings.TotalSlots;
+    var preview = new TenantScheduler().SelectDispatchBatch(
+        created,
+        totalSlots,
+        DateTimeOffset.UtcNow,
+        settings.ReservedHeadroomSlots);
     return Results.Ok(new
     {
         created = created.Count,
         activeTenants = tenantCount,
         totalSlots,
+        reservedHeadroomSlots = settings.ReservedHeadroomSlots,
         preview = BuildSchedulerPreview(created, preview)
     });
 });
@@ -271,8 +277,13 @@ app.MapGet("/demo/scheduler-preview", async (
     CancellationToken cancellationToken) =>
 {
     var jobs = await store.ListAsync(cancellationToken);
-    var effectiveSlots = slots ?? (await settingsStore.GetAsync(cancellationToken)).TotalSlots;
-    var selected = new TenantScheduler().SelectDispatchBatch(jobs, effectiveSlots, DateTimeOffset.UtcNow);
+    var settings = await settingsStore.GetAsync(cancellationToken);
+    var effectiveSlots = slots ?? settings.TotalSlots;
+    var selected = new TenantScheduler().SelectDispatchBatch(
+        jobs,
+        effectiveSlots,
+        DateTimeOffset.UtcNow,
+        settings.ReservedHeadroomSlots);
     return Results.Ok(BuildSchedulerPreview(jobs, selected));
 });
 
@@ -286,7 +297,10 @@ app.MapPost("/demo/settings", async (
     SchedulerSettingsStore settingsStore,
     CancellationToken cancellationToken) =>
 {
-    var settings = new SchedulerSettings(Math.Clamp(request.TotalSlots, 1, 100));
+    var totalSlots = Math.Clamp(request.TotalSlots, 1, 100);
+    var settings = new SchedulerSettings(
+        totalSlots,
+        Math.Clamp(request.ReservedHeadroomSlots, 0, Math.Max(0, totalSlots - 1)));
     await settingsStore.SaveAsync(settings, cancellationToken);
     return Results.Ok(settings);
 });

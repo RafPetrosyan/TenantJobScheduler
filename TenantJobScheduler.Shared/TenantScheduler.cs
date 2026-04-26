@@ -7,12 +7,15 @@ public sealed class TenantScheduler
     public IReadOnlyList<JobRecord> SelectDispatchBatch(
         IReadOnlyList<JobRecord> jobs,
         int totalSlots,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        int reservedHeadroomSlots = 0)
     {
         if (totalSlots <= 0)
         {
             return [];
         }
+
+        reservedHeadroomSlots = Math.Clamp(reservedHeadroomSlots, 0, Math.Max(0, totalSlots - 1));
 
         var running = jobs
             .Where(job => job.Status == JobStatus.Running && (!job.LockedUntil.HasValue || job.LockedUntil > now))
@@ -35,8 +38,15 @@ public sealed class TenantScheduler
             return [];
         }
 
-        var baseSlots = Math.Max(1, totalSlots / activeTenantIds.Count);
-        var freeSlots = Math.Max(0, totalSlots - running.Count);
+        var dispatchableSlots = Math.Max(1, totalSlots - reservedHeadroomSlots);
+        var baseSlots = Math.Max(1, dispatchableSlots / activeTenantIds.Count);
+        var freeSlots = Math.Max(0, dispatchableSlots - running.Count);
+        var headroomSlots = Math.Max(0, totalSlots - Math.Max(running.Count, dispatchableSlots));
+        if (freeSlots == 0 && headroomSlots > 0 && HasUnderservedQueuedTenant(queued, running, selected: [], activeTenantIds))
+        {
+            freeSlots = headroomSlots;
+        }
+
         var selected = new List<JobRecord>();
         var guard = activeTenantIds.Count * Math.Max(1, freeSlots + queued.Count);
 
@@ -49,6 +59,14 @@ public sealed class TenantScheduler
                 + selected.Count(job => SameTenant(job.TenantId, tenantId));
 
             if (tenantRunningCount >= baseSlots && HasOtherEligibleTenant(queued, running, selected, activeTenantIds, baseSlots))
+            {
+                continue;
+            }
+
+            if (running.Count >= dispatchableSlots
+                && reservedHeadroomSlots > 0
+                && tenantRunningCount > 0
+                && HasUnderservedQueuedTenant(queued, running, selected, activeTenantIds))
             {
                 continue;
             }
@@ -78,6 +96,18 @@ public sealed class TenantScheduler
             queued.Any(job => SameTenant(job.TenantId, tenantId))
             && running.Count(job => SameTenant(job.TenantId, tenantId))
             + selected.Count(job => SameTenant(job.TenantId, tenantId)) < baseSlots);
+    }
+
+    private static bool HasUnderservedQueuedTenant(
+        IReadOnlyList<JobRecord> queued,
+        IReadOnlyList<JobRecord> running,
+        IReadOnlyList<JobRecord> selected,
+        IReadOnlyList<string> activeTenantIds)
+    {
+        return activeTenantIds.Any(tenantId =>
+            queued.Any(job => SameTenant(job.TenantId, tenantId))
+            && running.Count(job => SameTenant(job.TenantId, tenantId))
+            + selected.Count(job => SameTenant(job.TenantId, tenantId)) == 0);
     }
 
     private static bool SameTenant(string left, string right)
