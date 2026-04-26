@@ -105,7 +105,7 @@ choco install k6
 Official installation guide: https://grafana.com/docs/k6/latest/set-up/install-k6/
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-k6-load-tests.ps1 -BaseUrl http://localhost:5080 -Rate 40 -Duration 1m -JobDurationMs 500
+powershell -ExecutionPolicy Bypass -File .\scripts\run-k6-load-tests.ps1 -BaseUrl http://localhost:5080 -Rate 40 -Duration 1m -JobDurationMs 500 -TotalSlots 20
 ```
 
 Supported scenarios:
@@ -190,7 +190,7 @@ docs\benchmark-results.md
 Run real HTTP load tests with k6:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-k6-load-tests.ps1 -BaseUrl http://localhost:5080 -Rate 40 -Duration 1m -JobDurationMs 500
+powershell -ExecutionPolicy Bypass -File .\scripts\run-k6-load-tests.ps1 -BaseUrl http://localhost:5080 -Rate 40 -Duration 1m -JobDurationMs 500 -TotalSlots 20
 ```
 
 This requires k6 to be installed and the demo services to be running. The report is written to:
